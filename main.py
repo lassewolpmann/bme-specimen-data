@@ -1,29 +1,43 @@
 import json
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+from random import randint
+
+MIN_INDEX = 0
+MAX_INDEX = 20000
+STEP = 0
+
+def get_gas_resistance(file_path: str):
+    with open(file_path, "r") as f:
+        json_data = json.load(f)
+        specimen_data = list(filter(lambda x: x[8] == STEP, json_data["data"]["specimenDataPoints"][MIN_INDEX:MAX_INDEX]))
+        return np.array(list(map(lambda x: x[1], specimen_data)))
 
 if __name__ == '__main__':
-    with open("data/fresh_air_no_sample.bmespecimen", "r") as fresh_air_file:
-        f = json.load(fresh_air_file)
+    all_files = os.listdir("data")
 
-        measurement_data = f["data"]["specimenDataPoints"][0:50000]
-        gas = np.array(list(map(lambda x: x[1], measurement_data)))
-        temp = np.array(list(map(lambda x: x[2], measurement_data)))
-        time = np.array(list(map(lambda x: x[5], measurement_data)))
+    colors = []
 
-        fig, ax1 = plt.subplots()
+    for i in range(len(all_files)):
+        colors.append('#%06X' % randint(0, 0xFFFFFF))
 
-        color = 'tab:red'
-        ax1.set_xlabel('timestamp')
-        ax1.set_ylabel('temp', color=color)
-        ax1.set_ylim(bottom=0, top=temp.max())
-        ax1.plot(time, temp, color=color)
+    data = []
 
-        color = 'tab:blue'
-        ax2 = ax1.twinx()
-        ax2.set_ylabel('gas resistance', color=color)
-        ax2.set_ylim(bottom=0, top=gas.max())
-        ax2.plot(time, gas, color=color)
+    for file in all_files:
+        data.append({
+            "name": f"{file.split('_')[0]}% Ethanol",
+            "color": colors.pop(),
+            "data": get_gas_resistance(f"data/{file}")
+        })
 
-        fig.tight_layout()
-        plt.show()
+    fig, ax = plt.subplots()
+
+    ax.set_ylabel('Gas Resistance')
+    for d in data:
+        ax.plot(d["data"], color=d["color"], label=d["name"])
+
+    ax.legend()
+
+    fig.tight_layout()
+    plt.show()
