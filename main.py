@@ -16,6 +16,7 @@ def get_gas_resistance(file_path: str):
 
 if __name__ == '__main__':
     all_files = os.listdir("data")
+    all_files = list(filter(lambda x: x.split(".")[1] == "bmespecimen", all_files))
 
     colors = []
 
