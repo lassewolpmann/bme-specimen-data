@@ -4,10 +4,7 @@ from matplotlib import colormaps
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from random import randint
 
-MIN_INDEX = 0
-MAX_INDEX = -1
 AVG_N = 1600
 
 def moving_average(a, n=AVG_N):
@@ -43,7 +40,7 @@ if __name__ == '__main__':
         with open(f"data/{file_name}", "r") as file:
             json_data = json.load(file)
 
-            specimen_data = json_data["data"]["specimenDataPoints"][MIN_INDEX:MAX_INDEX]
+            specimen_data = json_data["data"]["specimenDataPoints"]
             specimen_sorted_by_time = sorted(specimen_data, key=lambda x: x[5])
 
             gas = []
@@ -88,7 +85,8 @@ if __name__ == '__main__':
     ax4.set_ylabel('Pressure')
 
     for d in data:
-        ax1.plot(d["timestamp"], d["gas"], color=d["color"], label=d["name"], linestyle="None", marker=".", markersize=2)
+        ax1.plot(d["timestamp"], d["gas"], color=d["color"], label=d["name"], linestyle="None", marker=".",
+                 markersize=2)
         ax2.plot(d["timestamp"], d["temp"], color=d["color"], label=d["name"], linestyle="None", marker=".",
                  markersize=2)
         ax3.plot(d["timestamp"], d["humidity"], color=d["color"], label=d["name"], linestyle="None", marker=".",
