@@ -48,17 +48,20 @@ if __name__ == '__main__':
 
             gas = []
             temp = []
+            pressure = []
             humidity = []
             time_since_power_on = []
 
             for s in specimen_sorted_by_time:
                 gas.append(s[1])
                 temp.append(s[2])
+                pressure.append(s[3])
                 humidity.append(s[4])
                 time_since_power_on.append(s[5])
 
             gas_moving_average = moving_average(gas)
             temp_moving_average = moving_average(temp)
+            pressure_moving_average = moving_average(pressure)
             humidity_moving_average = moving_average(humidity)
 
             data.append({
@@ -66,11 +69,12 @@ if __name__ == '__main__':
                 "color": colors.pop(),
                 "gas": gas_moving_average,
                 "temp": temp_moving_average,
+                "pressure": pressure_moving_average,
                 "humidity": humidity_moving_average,
                 "timestamp": time_since_power_on[:-(AVG_N - 1)] # This is necessary because of the moving average calculations
             })
 
-    fig, (ax1, ax2, ax3) = plt.subplots(3)
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
     ax1.set_xlabel('Time since power on')
     ax1.set_ylabel('Gas Resistance (Moving Average)')
 
@@ -80,15 +84,21 @@ if __name__ == '__main__':
     ax3.set_xlabel('Time since power on')
     ax3.set_ylabel('Relative Humidity')
 
+    ax4.set_xlabel('Time since power on')
+    ax4.set_ylabel('Pressure')
+
     for d in data:
         ax1.plot(d["timestamp"], d["gas"], color=d["color"], label=d["name"], linestyle="None", marker=".", markersize=2)
         ax2.plot(d["timestamp"], d["temp"], color=d["color"], label=d["name"], linestyle="None", marker=".",
                  markersize=2)
         ax3.plot(d["timestamp"], d["humidity"], color=d["color"], label=d["name"], linestyle="None", marker=".",
                  markersize=2)
+        ax4.plot(d["timestamp"], d["pressure"], color=d["color"], label=d["name"], linestyle="None", marker=".",
+                 markersize=2)
 
     ax1.legend(markerscale=10, loc=1)
     ax2.legend(markerscale=10, loc=1)
     ax3.legend(markerscale=10, loc=1)
+    ax4.legend(markerscale=10, loc=1)
 
     plt.show()
