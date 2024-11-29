@@ -15,7 +15,7 @@ def moving_average(a, n=AVG_N):
 def get_specimen_files(dir_name: str) -> list:
     files = os.listdir(dir_name)
     files.sort()
-    return list(filter(lambda x: x.split(".")[1] == "bmespecimen", files))
+    return list(filter(lambda x: x[-11:] == "bmespecimen", files))
 
 def get_random_colors(n: int) -> list:
     return list(colormaps['jet'](np.linspace(0, 1, n)))
