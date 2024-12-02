@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-AVG_N = 1600
+AVG_N = 800
 
 def moving_average(a, n=AVG_N):
     ret = np.cumsum(a, dtype=float)
@@ -42,6 +42,7 @@ if __name__ == '__main__':
 
             specimen_data = json_data["data"]["specimenDataPoints"]
             specimen_sorted_by_time = sorted(specimen_data, key=lambda x: x[5])
+            specimen_sorted_by_time = list(filter(lambda x: x[8] == 0, specimen_sorted_by_time))
 
             gas = []
             temp = []
@@ -72,16 +73,16 @@ if __name__ == '__main__':
             })
 
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
-    ax1.set_xlabel('Time since power on')
+    ax1.set_xlabel('Time since power on (ms)')
     ax1.set_ylabel('Gas Resistance (Moving Average)')
 
-    ax2.set_xlabel('Time since power on')
+    ax2.set_xlabel('Time since power on (ms)')
     ax2.set_ylabel('Temperature')
 
-    ax3.set_xlabel('Time since power on')
+    ax3.set_xlabel('Time since power on (ms)')
     ax3.set_ylabel('Relative Humidity')
 
-    ax4.set_xlabel('Time since power on')
+    ax4.set_xlabel('Time since power on (ms)')
     ax4.set_ylabel('Pressure')
 
     for d in data:
