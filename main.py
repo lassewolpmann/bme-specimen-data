@@ -1,6 +1,7 @@
-import json
-
 from matplotlib import colormaps
+from scipy import stats
+
+import json
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -20,7 +21,7 @@ def get_specimen_files(dir_name: str) -> list:
 def get_random_colors(n: int) -> list:
     return list(colormaps['jet'](np.linspace(0, 1, n)))
 
-def parse_file_label(file_n: str):
+def parse_ethanol_label(file_n: str):
     concentration = file_n.split('_')[0]
     added_information = file_n.split('-')
     if len(added_information) == 1:
@@ -30,11 +31,22 @@ def parse_file_label(file_n: str):
 
     return f"{concentration}% Ethanol {hint}"
 
+def parse_diacetyl_label(file_n: str):
+    concentration = file_n.split('_')[0]
+    added_information = file_n.split('-')
+    if len(added_information) == 1:
+        hint = ''
+    else:
+        hint = f"({added_information[-1].split('.')[0]})"
+
+    return f"{concentration}ppm Diacetyl {hint}"
+
 if __name__ == '__main__':
     all_files = get_specimen_files("data")
     colors = get_random_colors(len(all_files))
 
-    data = []
+    ethanol_data = []
+    diacetyl_data = []
 
     for file_name in all_files:
         with open(f"data/{file_name}", "r") as file:
@@ -57,47 +69,69 @@ if __name__ == '__main__':
                 humidity.append(s[4])
                 time_since_power_on.append(s[5])
 
+            gas = np.array(gas)
+            temp = np.array(temp)
+            pressure = np.array(pressure)
+            humidity = np.array(humidity)
+
             gas_moving_average = moving_average(gas)
             temp_moving_average = moving_average(temp)
             pressure_moving_average = moving_average(pressure)
             humidity_moving_average = moving_average(humidity)
 
-            data.append({
-                "name": parse_file_label(file_name),
-                "color": colors.pop(),
-                "gas": gas_moving_average,
-                "temp": temp_moving_average,
-                "pressure": pressure_moving_average,
-                "humidity": humidity_moving_average,
-                "timestamp": time_since_power_on[:-(AVG_N - 1)] # This is necessary because of the moving average calculations
-            })
+            temp_z = stats.zscore(temp_moving_average)
+            pressure_z = stats.zscore(pressure_moving_average)
+            humidity_z = stats.zscore(humidity_moving_average)
 
-    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+            # gas_adjusted_with_z_score = np.multiply(gas_moving_average, temp_z)
+            # gas_adjusted_with_z_score = np.multiply(gas_adjusted_with_z_score, temp_z)
+            # gas_adjusted_with_z_score = np.multiply(gas_adjusted_with_z_score, pressure_z)
+            # gas_adjusted_with_z_score = np.multiply(gas_adjusted_with_z_score, humidity_z)
+
+            if "ethanol" in file_name:
+                ethanol_data.append({
+                    "name": parse_ethanol_label(file_name),
+                    "color": colors.pop(),
+                    "gas": gas_moving_average,
+                    "temp": temp_moving_average,
+                    "pressure": pressure_moving_average,
+                    "humidity": humidity_moving_average,
+                    "timestamp": time_since_power_on[:-(AVG_N - 1)] # This is necessary because of the moving average calculations
+                })
+
+            elif "diacetyl" in file_name:
+                diacetyl_data.append({
+                    "name": parse_diacetyl_label(file_name),
+                    "color": colors.pop(),
+                    "gas": gas_moving_average,
+                    "temp": temp_moving_average,
+                    "pressure": pressure_moving_average,
+                    "humidity": humidity_moving_average,
+                    "timestamp": time_since_power_on[:-(AVG_N - 1)]
+                    # This is necessary because of the moving average calculations
+                })
+
+            else:
+                continue
+
+    fig, ax1 = plt.subplots()
     ax1.set_xlabel('Time since power on (ms)')
-    ax1.set_ylabel('Gas Resistance (Moving Average)')
+    ax1.set_ylabel('Gas Resistance (Moving Average) - Ethanol')
 
-    ax2.set_xlabel('Time since power on (ms)')
-    ax2.set_ylabel('Temperature')
+    # ax2.set_xlabel('Time since power on (ms)')
+    # ax2.set_ylabel('Gas Resistance (Moving Average) - Diacetyl')
 
-    ax3.set_xlabel('Time since power on (ms)')
-    ax3.set_ylabel('Relative Humidity')
-
-    ax4.set_xlabel('Time since power on (ms)')
-    ax4.set_ylabel('Pressure')
-
-    for d in data:
+    for d in ethanol_data:
         ax1.plot(d["timestamp"], d["gas"], color=d["color"], label=d["name"], linestyle="None", marker=".",
                  markersize=2)
-        ax2.plot(d["timestamp"], d["temp"], color=d["color"], label=d["name"], linestyle="None", marker=".",
+
+    '''
+    for d in diacetyl_data:
+        ax2.plot(d["timestamp"], d["gas"], color=d["color"], label=d["name"], linestyle="None", marker=".",
                  markersize=2)
-        ax3.plot(d["timestamp"], d["humidity"], color=d["color"], label=d["name"], linestyle="None", marker=".",
-                 markersize=2)
-        ax4.plot(d["timestamp"], d["pressure"], color=d["color"], label=d["name"], linestyle="None", marker=".",
-                 markersize=2)
+     '''
 
     ax1.legend(markerscale=10, loc=1)
-    ax2.legend(markerscale=10, loc=1)
-    ax3.legend(markerscale=10, loc=1)
-    ax4.legend(markerscale=10, loc=1)
+    # ax2.legend(markerscale=10, loc=1)
 
     plt.show()
